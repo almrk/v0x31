@@ -31,8 +31,8 @@ public class Main {
             vao = glGenVertexArrays();
             vbo = glGenBuffers();
             ebo = glGenBuffers();
-            //Texture texture = new Texture("resources/textures/container.jpg");
-            Shader shader = new Shader("/shaders/vertexShader.glsl", "/shaders/fragmentShader.glsl");
+            Texture texture = new Texture("textures/container.jpg");
+            Shader shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
 
             // Copy the verticies and indicies data
             glBindVertexArray(vao);
@@ -55,17 +55,17 @@ public class Main {
                 glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT);
 
-                /*texture.bind();
+                texture.bind();
                 shader.use();
                 glBindVertexArray(vao);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);*/
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-                /*window.beginImGui();
+                window.beginImGui();
                 ImGui.begin("Hello world!");
                 ImGui.text("This is some text.");
                 ImGui.button("Click me!");
                 ImGui.end();
-                window.endImGui();*/
+                window.endImGui();
 
                 window.update();
             }

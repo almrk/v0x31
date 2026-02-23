@@ -1,9 +1,10 @@
 package org.v0x31;
 
-import org.lwjgl.opengl.*;
-import org.lwjgl.stb.*;
-import java.nio.*;
-import java.util.logging.*;
+import org.lwjgl.stb.STBImage;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import static org.lwjgl.opengl.GL33.*;
 
@@ -22,19 +23,29 @@ public class Texture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Load the image
+        ByteBuffer image = null;
+        try {
+            image = ResourceManager.readFileAsBytes(path);
+        } catch (FileNotFoundException fileNotFoundException) {
+            logger.severe(String.format("The texture \"%s\" was not found", fileNotFoundException.getMessage()));
+        } catch (IOException ioException) {
+            logger.severe(String.format("IOException received : %s", ioException.getMessage()));
+        }
+
+        // Parse the image
         int[] width = new int[1];
         int[] height = new int[1];
         int[] nChannels = new int[1];
-        ByteBuffer data = STBImage.stbi_load(path, width, height, nChannels, 0);
-        if (data == null)
+        ByteBuffer pixels = STBImage.stbi_load_from_memory(image, width, height, nChannels, 0);
+        if (pixels == null)
             logger.severe(String.format("Failed to load \"%s\"", path));
 
         // Copy the image pixels to the gpu/texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width[0], height[0], 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width[0], height[0], 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Free the image pixels
-        STBImage.stbi_image_free(data);
+        STBImage.stbi_image_free(pixels);
 
         logger.info(String.format("Loaded image \"%s\", %dx%d, %d channels", path, width[0], height[0], nChannels[0]));
     }

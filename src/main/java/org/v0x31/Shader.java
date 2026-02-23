@@ -1,10 +1,8 @@
 package org.v0x31;
 
-import org.lwjgl.opengl.*;
-import java.io.*;
-import java.net.URISyntaxException;
-import java.nio.file.*;
-import java.util.logging.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.logging.Logger;
 
 import static org.lwjgl.opengl.GL33.*;
 
@@ -18,21 +16,16 @@ public class Shader {
         String vertexShaderSource = "";
         String fragmentShaderSource = "";
         try {
-            Files.readString(getClass().getClassLoader().getResource(vertexShaderPath).toURI()) {
-                vertexShaderSource = vertexShaderFile.
-            }
-            try (InputStream fragmentShaderStream = getClass().getClassLoader().getResourceAsStream(vertexShaderPath)) {
-                fragmentShaderSource = fragmentShaderStream.readAllBytes().toString();
-            }
-        } catch (IOException ie) {
-            logger.severe(String.format("Failed to read file \"%s\"", ie.getMessage()));
-        } catch (URISyntaxException use) {
-            logger.severe(use.getMessage());
+            vertexShaderSource = ResourceManager.readFileAsString(vertexShaderPath);
+            fragmentShaderSource = ResourceManager.readFileAsString(fragmentShaderPath);
+        } catch (FileNotFoundException fileNotFoundException) {
+            logger.severe(String.format("The shader \"%s\" was not found", fileNotFoundException.getMessage()));
+        } catch (IOException ioException) {
+            logger.severe(String.format("IOException received : %s", ioException.getMessage()));
         }
+
         logger.info(String.format("Loaded vertex shader \"%s\"", vertexShaderPath));
         logger.info(String.format("Loaded fragment shader \"%s\"", fragmentShaderPath));
-
-        System.out.println(vertexShaderSource);
 
         int[] success = new int[1];
 

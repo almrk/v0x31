@@ -1,5 +1,7 @@
 package org.v0x31;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.glfw.ImGuiImplGlfw;
@@ -13,6 +15,8 @@ import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(Window.class);
+
     private final long windowPtr;
     private final ImGuiImplGlfw imGuiGlfw;
     private final ImGuiImplGl3 imGuiGl;
@@ -22,8 +26,11 @@ public class Window implements AutoCloseable {
         GLFWErrorCallback.createPrint(System.err).set();
 
         // GLFW initialisation & configuration
-        if (!glfwInit())
-            throw new IllegalStateException("Failed to initialise GLFW");
+        if (!glfwInit()) {
+            logger.error("Failed to initialise GLFW");
+        } else {
+            logger.info("Initialised GLFW successfully");
+        }
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -33,8 +40,11 @@ public class Window implements AutoCloseable {
 
         // Create the window
         this.windowPtr = glfwCreateWindow(width, height, title, NULL, NULL);
-        if (this.windowPtr == NULL)
-            throw new RuntimeException("Failed to create GLFW window");
+        if (this.windowPtr == NULL) {
+            logger.error("Failed to create GLFW window");
+        } else {
+            logger.info("Created window \"{}\", {}x{}", title, width, height);
+        }
 
         glfwSetFramebufferSizeCallback(this.windowPtr, (wp, w, h) -> {
             glViewport(0, 0, w, h);

@@ -1,19 +1,20 @@
 package org.v0x31;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.lwjgl.stb.STBImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 
 import static org.lwjgl.opengl.GL33.*;
 
-public class Texture {
+public class Texture implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(Texture.class);
+
     private final int id;
 
     public Texture(String path) {
-        Logger logger = Logger.getLogger(Texture.class.getName());
-
         // Create the texture and set parameters
         this.id = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, this.id);
@@ -27,9 +28,9 @@ public class Texture {
         try {
             image = ResourceManager.readFileAsBytes(path);
         } catch (FileNotFoundException fileNotFoundException) {
-            logger.severe(String.format("The texture \"%s\" was not found", fileNotFoundException.getMessage()));
+            logger.error("The texture \"{}\" was not found", fileNotFoundException.getMessage());
         } catch (IOException ioException) {
-            logger.severe(String.format("IOException received : %s", ioException.getMessage()));
+            logger.error("IOException received : {}", ioException.getMessage());
         }
 
         // Parse the image
@@ -37,8 +38,9 @@ public class Texture {
         int[] height = new int[1];
         int[] nChannels = new int[1];
         ByteBuffer pixels = STBImage.stbi_load_from_memory(image, width, height, nChannels, 0);
-        if (pixels == null)
-            logger.severe(String.format("Failed to load \"%s\"", path));
+        if (pixels == null) {
+            logger.error("Failed to load \"{}\"", path);
+        }
 
         // Copy the image pixels to the gpu/texture
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width[0], height[0], 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
@@ -47,7 +49,12 @@ public class Texture {
         // Free the image pixels
         STBImage.stbi_image_free(pixels);
 
-        logger.info(String.format("Loaded image \"%s\", %dx%d, %d channels", path, width[0], height[0], nChannels[0]));
+        logger.info("Loaded image \"{}\", {}x{}, {} channels", path, width[0], height[0], nChannels[0]);
+    }
+
+    @Override
+    public void close() {
+        glDeleteTextures(this.id);
     }
 
     public void bind() {

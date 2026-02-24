@@ -1,7 +1,6 @@
 package org.v0x31;
 
 import imgui.ImGui;
-import org.lwjgl.opengl.*;
 
 import static org.lwjgl.opengl.GL33.*;
 
@@ -24,15 +23,15 @@ public class Main {
         int vbo = 0;
         int ebo = 0;
 
-        System.out.println(System.getProperty("user.dir"));
-
-
-        try (Window window = new Window("v0x31", 800, 800)) {
+        try (
+                Window window = new Window("v0x31", 800, 800);
+                Texture texture = new Texture("textures/container.jpg");
+                Shader shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+        ) {
             vao = glGenVertexArrays();
             vbo = glGenBuffers();
             ebo = glGenBuffers();
-            Texture texture = new Texture("textures/container.jpg");
-            Shader shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
+
 
             // Copy the verticies and indicies data
             glBindVertexArray(vao);

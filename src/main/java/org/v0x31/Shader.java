@@ -1,67 +1,92 @@
 package org.v0x31;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.joml.Matrix4f;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL33.*;
 
-public class Shader {
-    private final int id;
+public class Shader implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(Shader.class);
+
+    private final String vertexShaderPath;
+    private final String fragmentShaderPath;
+    private int id;
 
     public Shader(String vertexShaderPath, String fragmentShaderPath) {
-        Logger logger = Logger.getLogger(Shader.class.getName());
+        this.vertexShaderPath = vertexShaderPath;
+        this.fragmentShaderPath = fragmentShaderPath;
+        recompile();
+    }
 
-        // Load the GLSL vertex and fragment shader source files.
-        String vertexShaderSource = "";
-        String fragmentShaderSource = "";
-        try {
-            vertexShaderSource = ResourceManager.readFileAsString(vertexShaderPath);
-            fragmentShaderSource = ResourceManager.readFileAsString(fragmentShaderPath);
-        } catch (FileNotFoundException fileNotFoundException) {
-            logger.severe(String.format("The shader \"%s\" was not found", fileNotFoundException.getMessage()));
-        } catch (IOException ioException) {
-            logger.severe(String.format("IOException received : %s", ioException.getMessage()));
-        }
+    @Override
+    public void close() {
+        glDeleteProgram(this.id);
+    }
 
-        logger.info(String.format("Loaded vertex shader \"%s\"", vertexShaderPath));
-        logger.info(String.format("Loaded fragment shader \"%s\"", fragmentShaderPath));
+    public void recompile() {
+        // Free the old program
+        glDeleteProgram(this.id);
 
-        int[] success = new int[1];
-
-        // Compile the vertex shader source.
-        int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, vertexShaderSource);
-        glCompileShader(vertexShader);
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, success);
-        if (success[0] != GL_TRUE) {
-            logger.severe(String.format("Failed to load vertex shader \"%s\"\n%s", vertexShaderPath, glGetShaderInfoLog(vertexShader)));
-        }
-
-        // Compile the fragment shader source.
-        int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, fragmentShaderSource);
-        glCompileShader(fragmentShader);
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, success);
-        if (success[0] != GL_TRUE) {
-            logger.severe(String.format("Failed to load fragment shader \"%s\"\n%s", fragmentShaderPath, glGetShaderInfoLog(fragmentShader)));
-        }
-
-        // Link the compiled results of the shaders into a program
-        this.id = glCreateProgram();
-        glAttachShader(this.id, vertexShader);
-        glAttachShader(this.id, fragmentShader);
-        glLinkProgram(this.id);
-        glGetProgramiv(this.id, GL_LINK_STATUS, success);
-        if (success[0] != GL_TRUE) {
-            logger.severe(glGetShaderInfoLog(this.id));
-        }
-
-        logger.info("Shader compiled successfully");
+        // Compile and link the vertex and fragment shader in a program.
+        int vertexShader = compileShader(this.vertexShaderPath, GL_VERTEX_SHADER);
+        int fragmentShader = compileShader(this.fragmentShaderPath, GL_FRAGMENT_SHADER);
+        this.id = linkProgram(vertexShader, fragmentShader);
 
         // Cleanup
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
+    }
+
+    private int compileShader(String path, int type) {
+        // Load the GLSL vertex and fragment shader source files.
+        String shaderSource = "";
+        try {
+            shaderSource = ResourceManager.readFileAsString(path);
+        } catch (FileNotFoundException fileNotFoundException) {
+            logger.error("The shader \"{}\" was not found", fileNotFoundException.getMessage());
+        } catch (IOException ioException) {
+            logger.info("IOException received : {}", ioException.getMessage());
+        }
+
+        // Compile the shader source.
+        int shader = glCreateShader(type);
+        glShaderSource(shader, shaderSource);
+        glCompileShader(shader);
+
+        // Check for errors.
+        int[] success = new int[1];
+        glGetShaderiv(shader, GL_COMPILE_STATUS, success);
+        if (success[0] != GL_TRUE) {
+            logger.error("Failed to load fragment shader \"{}\"\n{}", path, glGetShaderInfoLog(shader));
+        } else {
+            logger.info("Compiled shader \"{}\" successfully", path);
+        }
+
+        return shader;
+    }
+
+    private int linkProgram(int vertexShader, int fragmentShader) {
+        // Link the compiled results of the shaders into a program.
+        int program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        glAttachShader(program, fragmentShader);
+        glLinkProgram(program);
+
+        // Check for errors.
+        int[] success = new int[1];
+        glGetProgramiv(program, GL_LINK_STATUS, success);
+        if (success[0] != GL_TRUE) {
+            logger.error("Failed to link shader program\n{}", glGetShaderInfoLog(program));
+        } else {
+            logger.info("Linked shader program successfully");
+        }
+
+        return program;
     }
 
     public void use() {
@@ -78,6 +103,12 @@ public class Shader {
 
     public void setFloat(String name, float value) {
         glUniform1f(glGetUniformLocation(this.id, name), value);
+    }
+
+    public void setMat4(String name, Matrix4f matrix) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
+        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+        glUniformMatrix4fv(glGetUniformLocation(this.id, name), false, floatBuffer);
     }
 
     public boolean getBoolean(String name) {

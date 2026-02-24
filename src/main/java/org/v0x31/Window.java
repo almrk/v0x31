@@ -46,7 +46,7 @@ public class Window implements AutoCloseable {
             logger.info("Created window \"{}\", {}x{}", title, width, height);
         }
 
-        glfwSetFramebufferSizeCallback(this.windowPtr, (wp, w, h) -> {
+        glfwSetFramebufferSizeCallback(this.windowPtr, (_, w, h) -> {
             glViewport(0, 0, w, h);
         });
 
@@ -61,10 +61,12 @@ public class Window implements AutoCloseable {
         // Initialise ImGui
         ImGui.createContext();
 
+        // Configure ImGui
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(null);
         io.setFontGlobalScale(1.5f);
 
+        // More ImGui initialisation
         this.imGuiGlfw = new ImGuiImplGlfw();
         this.imGuiGlfw.init(this.windowPtr, true);
         this.imGuiGl = new ImGuiImplGl3();

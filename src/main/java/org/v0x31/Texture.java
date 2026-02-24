@@ -42,7 +42,7 @@ public class Texture implements AutoCloseable {
             logger.error("Failed to load \"{}\"", path);
         }
 
-        // Copy the image pixels to the gpu/texture
+        // Copy the image pixels to the GPU/texture
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width[0], height[0], 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         glGenerateMipmap(GL_TEXTURE_2D);
 

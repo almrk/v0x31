@@ -32,7 +32,6 @@ public class Main {
             vbo = glGenBuffers();
             ebo = glGenBuffers();
 
-
             // Copy the verticies and indicies data
             glBindVertexArray(vao);
             glBindBuffer(GL_ARRAY_BUFFER, vbo);

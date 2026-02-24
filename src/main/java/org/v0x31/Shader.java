@@ -20,7 +20,7 @@ public class Shader implements AutoCloseable {
     public Shader(String vertexShaderPath, String fragmentShaderPath) {
         this.vertexShaderPath = vertexShaderPath;
         this.fragmentShaderPath = fragmentShaderPath;
-        recompile();
+        this.recompile();
     }
 
     @Override
@@ -32,10 +32,10 @@ public class Shader implements AutoCloseable {
         // Free the old program
         glDeleteProgram(this.id);
 
-        // Compile and link the vertex and fragment shader in a program.
-        int vertexShader = compileShader(this.vertexShaderPath, GL_VERTEX_SHADER);
-        int fragmentShader = compileShader(this.fragmentShaderPath, GL_FRAGMENT_SHADER);
-        this.id = linkProgram(vertexShader, fragmentShader);
+        // Compile and link the vertex and fragment shader in a program
+        int vertexShader = this.compileShader(this.vertexShaderPath, GL_VERTEX_SHADER);
+        int fragmentShader = this.compileShader(this.fragmentShaderPath, GL_FRAGMENT_SHADER);
+        this.id = this.linkProgram(vertexShader, fragmentShader);
 
         // Cleanup
         glDeleteShader(vertexShader);
@@ -43,7 +43,7 @@ public class Shader implements AutoCloseable {
     }
 
     private int compileShader(String path, int type) {
-        // Load the GLSL vertex and fragment shader source files.
+        // Load the GLSL vertex and fragment shader source files
         String shaderSource = "";
         try {
             shaderSource = ResourceManager.readFileAsString(path);
@@ -53,12 +53,12 @@ public class Shader implements AutoCloseable {
             logger.info("IOException received : {}", ioException.getMessage());
         }
 
-        // Compile the shader source.
+        // Compile the shader source
         int shader = glCreateShader(type);
         glShaderSource(shader, shaderSource);
         glCompileShader(shader);
 
-        // Check for errors.
+        // Check for errors
         int[] success = new int[1];
         glGetShaderiv(shader, GL_COMPILE_STATUS, success);
         if (success[0] != GL_TRUE) {
@@ -71,13 +71,13 @@ public class Shader implements AutoCloseable {
     }
 
     private int linkProgram(int vertexShader, int fragmentShader) {
-        // Link the compiled results of the shaders into a program.
+        // Link the compiled results of the shaders into a program
         int program = glCreateProgram();
         glAttachShader(program, vertexShader);
         glAttachShader(program, fragmentShader);
         glLinkProgram(program);
 
-        // Check for errors.
+        // Check for errors
         int[] success = new int[1];
         glGetProgramiv(program, GL_LINK_STATUS, success);
         if (success[0] != GL_TRUE) {

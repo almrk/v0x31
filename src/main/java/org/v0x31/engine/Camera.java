@@ -1,4 +1,4 @@
-package org.v0x31;
+package org.v0x31.engine;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -28,7 +28,7 @@ public class Camera {
     private float speed;
     private float sensitivity;
     private float zoom;
-    // Mouse
+    // Mouse state
     private Vector2f lastMousePosition;
 
     public Camera() {
@@ -58,6 +58,14 @@ public class Camera {
         if (sensitivity >= SENSITIVITY_MIN && sensitivity <= SENSITIVITY_MAX) {
             this.sensitivity = sensitivity;
         }
+    }
+
+    public float getSpeed() {
+        return this.speed;
+    }
+
+    public float getSensitivity() {
+        return this.sensitivity;
     }
 
     public float getZoom() {

@@ -2,10 +2,10 @@ package org.v0x31;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.lwjgl.BufferUtils;
 import org.joml.Matrix4f;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL33.*;
@@ -106,8 +106,8 @@ public class Shader implements AutoCloseable {
     }
 
     public void setMat4(String name, Matrix4f matrix) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
-        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+        FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);
+        matrix.get(floatBuffer);
         glUniformMatrix4fv(glGetUniformLocation(this.id, name), false, floatBuffer);
     }
 

@@ -1,6 +1,8 @@
 package org.v0x31;
 
 import imgui.ImGui;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import org.joml.Matrix4f;
 
 import static org.lwjgl.opengl.GL33.*;
 
@@ -9,11 +11,48 @@ public class Main {
 
     public static void main(String[] args) {
         float[] verticies = new float[]{
-                // Positions          // Colors           // Texture coords
-                 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-                 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-                -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-                -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
+                // Positions          // Texture coords
+                -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+                0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+                -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+                -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+                0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+                -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+                -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
         int[] indicies = new int[]{
                 0, 1, 3, // first triangle
@@ -28,6 +67,8 @@ public class Main {
                 Texture texture = new Texture("textures/container.jpg");
                 Shader shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
         ) {
+            glEnable(GL_DEPTH_TEST);
+
             vao = glGenVertexArrays();
             vbo = glGenBuffers();
             ebo = glGenBuffers();
@@ -40,28 +81,52 @@ public class Main {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies, GL_STATIC_DRAW);
 
             // Set position attribute
-            glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * SIZEOF_FLOAT, 0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 5 * SIZEOF_FLOAT, 0);
             glEnableVertexAttribArray(0);
-            // Set color attribute
-            glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * SIZEOF_FLOAT, 3 * SIZEOF_FLOAT);
-            glEnableVertexAttribArray(1);
             // Set the texture coords attribute
-            glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * SIZEOF_FLOAT, 6 * SIZEOF_FLOAT);
-            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * SIZEOF_FLOAT, 3 * SIZEOF_FLOAT);
+            glEnableVertexAttribArray(1);
 
             while (window.isOpen()) {
                 glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 texture.bind();
                 shader.use();
+                Matrix4f model = new Matrix4f(
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f
+                );
+                Matrix4f view = new Matrix4f(
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f
+                );
+                Matrix4f projection = new Matrix4f(
+                        1.0f, 0.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f
+                );
+                model.rotate((float)glfwGetTime() * (float)Math.toRadians(50.0f), 0.0f, 1.0f, 0.5f);
+                view.translate(0.0f, 0.0f, -3.0f);
+                projection.perspective((float)Math.toRadians(70.0f), 1, 0.1f, 100.0f);
+                shader.setMat4("model", model);
+                shader.setMat4("view", view);
+                shader.setMat4("projection", projection);
+
                 glBindVertexArray(vao);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
 
                 window.beginImGui();
-                ImGui.begin("Hello world!");
-                ImGui.text("This is some text.");
-                ImGui.button("Click me!");
+                ImGui.begin("Developer toolbox");
+                ImGui.separatorText("Shader");
+                if (ImGui.button("Recompile")) {
+                    shader.recompile();
+                }
                 ImGui.end();
                 window.endImGui();
 

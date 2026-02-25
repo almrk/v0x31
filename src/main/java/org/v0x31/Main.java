@@ -1,9 +1,10 @@
 package org.v0x31;
 
 import imgui.ImGui;
-import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33.*;
 
 public class Main {
@@ -67,6 +68,18 @@ public class Main {
                 Texture texture = new Texture("textures/container.jpg");
                 Shader shader = new Shader("shaders/vertex.glsl", "shaders/fragment.glsl");
         ) {
+            Camera camera = new Camera();
+
+            window.setWindowResizeCallback((_, width, height) -> {
+                glViewport(0, 0, width, height);
+            });
+            window.setMouseMovementCallback((_, x, y) -> {
+                camera.updateYawPitch(new Vector2f((float)x, (float)y));
+            });
+            window.setMouseWheelCallback((_, _, y) -> {
+                camera.updateZoom((float)y);
+            });
+
             glEnable(GL_DEPTH_TEST);
 
             vao = glGenVertexArrays();
@@ -87,7 +100,7 @@ public class Main {
             glVertexAttribPointer(1, 2, GL_FLOAT, false, 5 * SIZEOF_FLOAT, 3 * SIZEOF_FLOAT);
             glEnableVertexAttribArray(1);
 
-            while (window.isOpen()) {
+            while (!window.shouldClose()) {
                 glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -120,15 +133,6 @@ public class Main {
 
                 glBindVertexArray(vao);
                 glDrawArrays(GL_TRIANGLES, 0, 36);
-
-                window.beginImGui();
-                ImGui.begin("Developer toolbox");
-                ImGui.separatorText("Shader");
-                if (ImGui.button("Recompile")) {
-                    shader.recompile();
-                }
-                ImGui.end();
-                window.endImGui();
 
                 window.update();
             }

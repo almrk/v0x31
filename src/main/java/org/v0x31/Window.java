@@ -1,12 +1,8 @@
 package org.v0x31;
 
+import org.lwjgl.glfw.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import imgui.ImGui;
-import imgui.ImGuiIO;
-import imgui.glfw.ImGuiImplGlfw;
-import imgui.gl3.ImGuiImplGl3;
-import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -17,9 +13,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Window implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Window.class);
 
-    private final long windowPtr;
-    private final ImGuiImplGlfw imGuiGlfw;
-    private final ImGuiImplGl3 imGuiGl;
+    private final long pointer;
 
     public Window(String title, int width, int height) {
         // GLFW error callback
@@ -39,70 +33,59 @@ public class Window implements AutoCloseable {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         // Create the window
-        this.windowPtr = glfwCreateWindow(width, height, title, NULL, NULL);
-        if (this.windowPtr == NULL) {
+        this.pointer = glfwCreateWindow(width, height, title, NULL, NULL);
+        if (this.pointer == NULL) {
             logger.error("Failed to create GLFW window");
         } else {
             logger.info("Created window \"{}\", {}x{}", title, width, height);
         }
 
-        glfwSetFramebufferSizeCallback(this.windowPtr, (_, w, h) -> {
-            glViewport(0, 0, w, h);
-        });
-
         // Enable V-Sync and show the window
-        glfwMakeContextCurrent(this.windowPtr);
+        glfwMakeContextCurrent(this.pointer);
         glfwSwapInterval(1);
-        glfwShowWindow(this.windowPtr);
+        glfwShowWindow(this.pointer);
 
         // Initialise OpenGL
         GL.createCapabilities();
-
-        // Initialise ImGui
-        ImGui.createContext();
-
-        // Configure ImGui
-        ImGuiIO io = ImGui.getIO();
-        io.setIniFilename(null);
-        io.setFontGlobalScale(1.5f);
-
-        // More ImGui initialisation
-        this.imGuiGlfw = new ImGuiImplGlfw();
-        this.imGuiGlfw.init(this.windowPtr, true);
-        this.imGuiGl = new ImGuiImplGl3();
-        this.imGuiGl.init("#version 330");
     }
 
     @Override
     public void close() {
-        // Cleanup ImGui
-        this.imGuiGl.shutdown();
-        this.imGuiGlfw.shutdown();
-        ImGui.destroyContext();
-
-        // Cleanup GLFW
-        glfwFreeCallbacks(this.windowPtr);
-        glfwDestroyWindow(this.windowPtr);
+        glfwFreeCallbacks(this.pointer);
+        glfwDestroyWindow(this.pointer);
         glfwTerminate();
     }
 
-    public boolean isOpen() {
-        return !glfwWindowShouldClose(this.windowPtr);
-    }
-
     public void update() {
-        glfwSwapBuffers(this.windowPtr);
+        glfwSwapBuffers(this.pointer);
         glfwPollEvents();
     }
 
-    public void beginImGui() {
-        this.imGuiGl.newFrame();
-        this.imGuiGlfw.newFrame();
-        ImGui.newFrame();
+    public boolean shouldClose() {
+        return glfwWindowShouldClose(this.pointer);
     }
 
-    public void endImGui() {
-        ImGui.render();
-        this.imGuiGl.renderDrawData(ImGui.getDrawData());
+    public void setWindowResizeCallback(GLFWFramebufferSizeCallbackI callback) {
+        glfwSetFramebufferSizeCallback(this.pointer, callback);
+    }
+
+    public void setWindowFocusCallback(GLFWWindowFocusCallbackI callback) {
+        glfwSetWindowFocusCallback(this.pointer, callback);
+    }
+
+    public void setKeyCallback(GLFWKeyCallbackI callback) {
+        glfwSetKeyCallback(this.pointer, callback);
+    }
+
+    public void setMouseButtonCallback(GLFWMouseButtonCallbackI callback) {
+        glfwSetMouseButtonCallback(this.pointer, callback);
+    }
+
+    public void setMouseMovementCallback(GLFWCursorPosCallbackI callback) {
+        glfwSetCursorPosCallback(this.pointer, callback);
+    }
+
+    public void setMouseWheelCallback(GLFWScrollCallbackI callback) {
+        glfwSetScrollCallback(this.pointer, callback);
     }
 }

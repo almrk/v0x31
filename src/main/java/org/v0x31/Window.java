@@ -12,7 +12,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Window implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Window.class);
 
-    private final long pointer;
+    private long windowPointer;
+    private float windowLastFrame;
 
     public Window(String title, int width, int height) {
         // GLFW error callback
@@ -32,17 +33,18 @@ public class Window implements AutoCloseable {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         // Create the window
-        this.pointer = glfwCreateWindow(width, height, title, NULL, NULL);
-        if (this.pointer == NULL) {
+        this.windowPointer = glfwCreateWindow(width, height, title, NULL, NULL);
+        if (this.windowPointer == NULL) {
             logger.error("Failed to create GLFW window");
         } else {
             logger.info("Created window \"{}\", {}x{}", title, width, height);
         }
 
         // Enable V-Sync and show the window
-        glfwMakeContextCurrent(this.pointer);
+        glfwMakeContextCurrent(this.windowPointer);
         glfwSwapInterval(1);
-        glfwShowWindow(this.pointer);
+        glfwSetInputMode(this.windowPointer, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwShowWindow(this.windowPointer);
 
         // Initialise OpenGL
         GL.createCapabilities();
@@ -50,41 +52,47 @@ public class Window implements AutoCloseable {
 
     @Override
     public void close() {
-        glfwFreeCallbacks(this.pointer);
-        glfwDestroyWindow(this.pointer);
+        glfwFreeCallbacks(this.windowPointer);
+        glfwDestroyWindow(this.windowPointer);
         glfwTerminate();
     }
 
     public void update() {
-        glfwSwapBuffers(this.pointer);
+        this.windowLastFrame = (float)glfwGetTime();
+
+        glfwSwapBuffers(this.windowPointer);
         glfwPollEvents();
     }
 
     public boolean shouldClose() {
-        return glfwWindowShouldClose(this.pointer);
+        return glfwWindowShouldClose(this.windowPointer);
+    }
+
+    public float deltaTime() {
+        return (float)glfwGetTime() - this.windowLastFrame;
     }
 
     public void setWindowResizeCallback(GLFWFramebufferSizeCallbackI callback) {
-        glfwSetFramebufferSizeCallback(this.pointer, callback);
+        glfwSetFramebufferSizeCallback(this.windowPointer, callback);
     }
 
     public void setWindowFocusCallback(GLFWWindowFocusCallbackI callback) {
-        glfwSetWindowFocusCallback(this.pointer, callback);
+        glfwSetWindowFocusCallback(this.windowPointer, callback);
     }
 
     public void setKeyCallback(GLFWKeyCallbackI callback) {
-        glfwSetKeyCallback(this.pointer, callback);
+        glfwSetKeyCallback(this.windowPointer, callback);
     }
 
     public void setMouseButtonCallback(GLFWMouseButtonCallbackI callback) {
-        glfwSetMouseButtonCallback(this.pointer, callback);
+        glfwSetMouseButtonCallback(this.windowPointer, callback);
     }
 
     public void setMouseMovementCallback(GLFWCursorPosCallbackI callback) {
-        glfwSetCursorPosCallback(this.pointer, callback);
+        glfwSetCursorPosCallback(this.windowPointer, callback);
     }
 
     public void setMouseWheelCallback(GLFWScrollCallbackI callback) {
-        glfwSetScrollCallback(this.pointer, callback);
+        glfwSetScrollCallback(this.windowPointer, callback);
     }
 }

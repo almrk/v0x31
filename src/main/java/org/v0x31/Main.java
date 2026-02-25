@@ -73,6 +73,14 @@ public class Main {
             window.setWindowResizeCallback((_, width, height) -> {
                 glViewport(0, 0, width, height);
             });
+            window.setKeyCallback((_, key, scancode, action, mods) -> {
+                switch (key) {
+                    case GLFW_KEY_W -> camera.updatePosition(CameraMovement.forward, window.deltaTime());
+                    case GLFW_KEY_S -> camera.updatePosition(CameraMovement.backward, window.deltaTime());
+                    case GLFW_KEY_A -> camera.updatePosition(CameraMovement.left, window.deltaTime());
+                    case GLFW_KEY_D -> camera.updatePosition(CameraMovement.right, window.deltaTime());
+                }
+            });
             window.setMouseMovementCallback((_, x, y) -> {
                 camera.updateYawPitch(new Vector2f((float)x, (float)y));
             });
@@ -106,29 +114,12 @@ public class Main {
 
                 texture.bind();
                 shader.use();
-                Matrix4f model = new Matrix4f(
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        0.0f, 1.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, 1.0f, 0.0f,
-                        0.0f, 0.0f, 0.0f, 1.0f
-                );
-                Matrix4f view = new Matrix4f(
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        0.0f, 1.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, 1.0f, 0.0f,
-                        0.0f, 0.0f, 0.0f, 1.0f
-                );
-                Matrix4f projection = new Matrix4f(
-                        1.0f, 0.0f, 0.0f, 0.0f,
-                        0.0f, 1.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f, 1.0f, 0.0f,
-                        0.0f, 0.0f, 0.0f, 1.0f
-                );
-                model.rotate((float)glfwGetTime() * (float)Math.toRadians(50.0f), 0.0f, 1.0f, 0.5f);
-                view.translate(0.0f, 0.0f, -3.0f);
-                projection.perspective((float)Math.toRadians(70.0f), 1, 0.1f, 100.0f);
+                Matrix4f model = new Matrix4f();
+                Matrix4f projection = new Matrix4f();
+                //model.rotate((float)glfwGetTime() * (float)Math.toRadians(50.0f), 0.25f, 0.0f, 0.0f);
+                projection.perspective((float)Math.toRadians(camera.getZoom()), 1, 0.1f, 100.0f);
                 shader.setMat4("model", model);
-                shader.setMat4("view", view);
+                shader.setMat4("view", camera.getView());
                 shader.setMat4("projection", projection);
 
                 glBindVertexArray(vao);

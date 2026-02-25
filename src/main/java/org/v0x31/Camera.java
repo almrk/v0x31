@@ -1,5 +1,6 @@
 package org.v0x31;
 
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -27,13 +28,15 @@ public class Camera {
     private float speed;
     private float sensitivity;
     private float zoom;
+    // Mouse
+    private Vector2f lastMousePosition;
 
     public Camera() {
-        this.position = new Vector3f(0.0f, 0.0f, 0.0f);
-        this.front = new Vector3f(0.0f, 0.0f, 0.0f);
-        this.up = new Vector3f(0.0f, 0.0f, 0.0f);
+        this.position = new Vector3f(0.0f, 0.0f, 3.0f);
+        this.front = new Vector3f(0.0f, 0.0f, -1.0f);
+        this.up = new Vector3f(0.0f, 1.0f, 0.0f);
         this.right = new Vector3f(0.0f, 0.0f, 0.0f);
-        this.worldUp = new Vector3f(0.0f, 0.0f, 0.0f);
+        this.worldUp = new Vector3f(0.0f, 1.0f, 0.0f);
 
         this.yaw = -90.0f;
         this.pitch = 0.0f;
@@ -41,6 +44,8 @@ public class Camera {
         this.speed = 3.0f;
         this.sensitivity = SENSITIVITY_MIN;
         this.zoom = ZOOM_MAX;
+
+        this.lastMousePosition = null;
     }
 
     public void setSpeed(float speed) {
@@ -55,6 +60,14 @@ public class Camera {
         }
     }
 
+    public float getZoom() {
+        return this.zoom;
+    }
+
+    public Matrix4f getView() {
+        return new Matrix4f().lookAt(this.position, new Vector3f(this.position).add(this.front), this.up);
+    }
+
     public void updatePosition(CameraMovement movement, float deltaTime) {
         float velocity = this.speed * deltaTime;
         switch (movement) {
@@ -65,9 +78,15 @@ public class Camera {
         }
     }
 
-    public void updateYawPitch(Vector2f position) {
-        this.yaw += position.x * this.sensitivity;
-        this.pitch += position.y * this.sensitivity;
+    public void updateYawPitch(Vector2f mousePosition) {
+        if (this.lastMousePosition == null) {
+            this.lastMousePosition = mousePosition;
+        }
+        float xOffset = mousePosition.x - this.lastMousePosition.x;
+        float yOffset = this.lastMousePosition.y - mousePosition.y;
+        this.lastMousePosition = mousePosition;
+        this.yaw += xOffset * this.sensitivity;
+        this.pitch += yOffset * this.sensitivity;
         if (this.pitch > PITCH_MAX) {
             this.pitch = PITCH_MAX;
         }
@@ -75,13 +94,13 @@ public class Camera {
             this.pitch = PITCH_MIN;
         }
 
-        this.front.x = (float)Math.cos(Math.toRadians(this.yaw) * Math.cos(Math.toRadians(this.pitch)));
+        this.front.x = (float)Math.cos(Math.toRadians(this.yaw)) * (float)Math.cos(Math.toRadians(this.pitch));
         this.front.y = (float)Math.sin(Math.toRadians(this.pitch));
-        this.front.z = (float)Math.sin(Math.toRadians(this.yaw) * Math.cos(Math.toRadians(this.pitch)));
+        this.front.z = (float)Math.sin(Math.toRadians(this.yaw)) * (float)Math.cos(Math.toRadians(this.pitch));
         this.front.normalize();
 
-        this.right = new Vector3f(this.front).cross(this.worldUp).normalize();
-        this.up = new Vector3f(this.front).cross(this.right).normalize();
+        this.right.set(this.front).cross(this.worldUp).normalize();
+        this.up.set(this.right).cross(this.front).normalize();
     }
 
     public void updateZoom(float change) {

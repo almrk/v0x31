@@ -13,33 +13,22 @@ import static org.lwjgl.opengl.GL33.*;
 public class Shader implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Shader.class);
 
-    private final String vertexShaderPath;
-    private final String fragmentShaderPath;
-    private int id;
+    private final int id;
 
     public Shader(String vertexShaderPath, String fragmentShaderPath) {
-        this.vertexShaderPath = vertexShaderPath;
-        this.fragmentShaderPath = fragmentShaderPath;
-        this.recompile();
-    }
-
-    @Override
-    public void close() {
-        glDeleteProgram(this.id);
-    }
-
-    public void recompile() {
-        // Free the old program
-        glDeleteProgram(this.id);
-
         // Compile and link the vertex and fragment shader in a program
-        int vertexShader = this.compileShader(this.vertexShaderPath, GL_VERTEX_SHADER);
-        int fragmentShader = this.compileShader(this.fragmentShaderPath, GL_FRAGMENT_SHADER);
+        int vertexShader = this.compileShader(vertexShaderPath, GL_VERTEX_SHADER);
+        int fragmentShader = this.compileShader(fragmentShaderPath, GL_FRAGMENT_SHADER);
         this.id = this.linkProgram(vertexShader, fragmentShader);
 
         // Cleanup
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
+    }
+
+    @Override
+    public void close() {
+        glDeleteProgram(this.id);
     }
 
     private int compileShader(String path, int type) {

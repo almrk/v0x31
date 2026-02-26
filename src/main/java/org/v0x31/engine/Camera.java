@@ -76,7 +76,7 @@ public class Camera {
         return new Matrix4f().lookAt(this.position, new Vector3f(this.position).add(this.front), this.up);
     }
 
-    public void updatePosition(CameraMovement movement, float deltaTime) {
+    public void updatePosition(Movement movement, float deltaTime) {
         float velocity = this.speed * deltaTime;
         switch (movement) {
             case forward -> this.position.add(new Vector3f(this.front).mul(velocity));
@@ -119,6 +119,13 @@ public class Camera {
         if (this.zoom > ZOOM_MAX) {
             this.zoom = ZOOM_MAX;
         }
+    }
+
+    public enum Movement {
+        forward,
+        backward,
+        left,
+        right
     }
 }
 
